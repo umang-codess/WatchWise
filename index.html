@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MovieSearch | Umang</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #0f0f1a;
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        /* nav*/
+        .navbar {
+            background: rgba(15, 15, 26, 0.95);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #e50914;
+        }
+
+
+        /* === HERO SECTION === */
+        .hero {
+            text-align: center;
+            padding: 3rem 2rem 2rem;
+        }
+
+        .hero h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .hero p {
+            color: #888;
+            margin-bottom: 1.5rem;
+        }
+
+        .search-box {
+            max-width: 600px;
+            margin: 0 auto;
+            display: flex;
+            gap: 0.3rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 0.5rem;
+            overflow: hidden;
+            
+        }
+
+        .search-box input {
+            flex: 1;
+            background: none;
+            border: none;
+            color: #fff;
+            padding: 0.6rem 1rem;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .search-box input::placeholder {
+            color: #666;
+        }
+
+        .search-btn {
+            background: #e50914;
+            color: #fff;
+            border: none;
+            padding: 0.5rem 0.8rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .search-btn:hover {
+            background: #ff1a25;
+        }
+
+        /* filter */
+        .filters {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .filter-select option {
+            background: #1a1a2e;
+        }
+
+        /* MOVIES GRID */
+        .movies-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem 3rem;
+        }
+
+        .movies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .movie-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .movie-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(229, 9, 20, 0.3);
+        }
+
+        .movie-poster {
+            position: relative;
+            aspect-ratio: 2/3;
+            overflow: hidden;
+        }
+
+        .movie-poster img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+
+        .movie-card:hover .movie-poster img {
+            transform: scale(1.05);
+        }
+
+        .movie-rating {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #ffd700;
+        }
+
+        .movie-info {
+            padding: 1rem;
+        }
+
+        .movie-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 0.2rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .movie-year {
+            color: #888;
+            font-size: 0.85rem;
+        }
+
+        .movie-type {
+            display: inline-block;
+            margin-top: 0.5rem;
+            padding: 0.15rem 0.5rem;
+            background: rgba(229, 9, 20, 0.2);
+            color: #e50914;
+            font-size: 0.7rem;
+            border-radius: 3px;
+            text-transform: capitalize;
+        }
+        /* loading aur spinner*/
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #e50914;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .error {
+            text-align: center;
+            padding: 3rem;
+            color: #ff6b6b;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 4rem;
+            color: #888;
+        }
+
+        /*MODAL*/
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            overflow-y: auto;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1a1a2e;
+            border-radius: 12px;
+            max-width: 700px;
+            width: 100%;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 35px;
+            height: 35px;
+            background: rgba(0, 0, 0, 0.5);
+            border: none;
+            color: #fff;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.1rem;
+            z-index: 10;
+        }
+
+        .modal-poster {
+            width: 100%;
+            max-height: 300px;
+            object-fit: cover;
+        }
+
+        .modal-details {
+            padding: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-meta {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        .modal-plot {
+            line-height: 1.6;
+            color: #ccc;
+            margin-bottom: 1rem;
+        }
+
+        .modal-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 0.8rem;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 0.8rem;
+            border-radius: 6px;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #888;
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.4rem;
+            margin-top: 2rem;
+            padding-bottom: 2rem;
+        }
+
+        .page-btn {
+            padding: 0.4rem 0.8rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .page-btn:hover,
+        .page-btn.active {
+            background: #e50914;
+            border-color: #e50914;
+        }
+
+        .page-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+    
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #888;
+            font-size: 0.9rem;
+        
+        }
+        
+        
+        
+
+        .footer a {
+            color: #e50914;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+    
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 1.5rem;
+            }
+
+            .movies-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            }
+
+            .nav-content {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    
+    <nav class="navbar">
+        <div class="nav-content">
+            <span>🎬 MovieSearch</span>
+        </div>
+    </nav>
+
+    
+    <section class="hero">
+        <h1>Find Your Movie</h1>
+        <p>Search movies and TV shows</p>
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Search movies...">
+            <button class="search-btn" id="searchBtn">Search</button>
+        </div>
+    </section>
+
+    </html>
+    <div class="filters">
+        <select class="filter-select" id="typeFilter">
+            <option value="">All Types</option>
+            <option value="movie">Movies</option>
+            <option value="series">TV Series</option>
+        </select>
+        <select class="filter-select" id="yearFilter">
+            <option value="">All Years</option>
+        </select>
+    </div>
+
+     
+    <div class="movies-container">
+        <div id="resultsArea">
+            <div class="no-results">
+                <h3>Start searching to discover movies</h3>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="modal-overlay" id="modal">
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose">✕</button>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+
+    <footer class="footer">
+        <p>Built by <strong>Umang Dubey</strong></p>
+        <p>Live Demo: <a href="YOUR_GITHUB_PAGES_LINK_HERE" target="_blank">Click Here to View</a></p>
+    </footer>
+
+    <script>
+        // --- Configuration ---
+        const API_KEY = atob('NDQ2NTk2ZTU=');
+        const BASE_URL = 'https://www.omdbapi.com/';
+
+        // --- State Variables ---
+        let currentPage = 1;
+        let currentSearch = '';
+        let totalResults = 0;
+
+        // --- DOM Elements ---
+        const $ = id => document.getElementById(id);
+        const searchInput = $('searchInput');
+        const searchBtn = $('searchBtn');
+        const resultsArea = $('resultsArea');
+        const typeFilter = $('typeFilter');
+        const yearFilter = $('yearFilter');
+        const modal = $('modal');
+        const modalClose = $('modalClose');
+        const modalBody = $('modalBody');
+
+        // --- Populate Year Filter ---
+        for (let y = 2024; y >= 1950; y--) {
+            const o = document.createElement('option');
+            o.value = y;
+            o.textContent = y;
+            yearFilter.appendChild(o);
+        }
+
+        
+        async function api(endpoint, params) {
+            const q = new URLSearchParams({ ...params, apikey: API_KEY });
+            const r = await fetch(`${BASE_URL}?${q}`);
+            return r.json();
+        }
+
+        async function searchMovies(query, page = 1, type = '', year = '') {
+            let p = { s: query, page };
+            if (type) p.type = type;
+            if (year) p.y = year;
+            return api('', p);
+        }
+
+        async function getMovieDetails(id) {
+            return api('', { i: id, plot: 'full' });
+        }
+
+         
+        function renderLoading() {
+            resultsArea.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Searching...</p>
+                </div>
+            `;
+        }
+
+        function renderError(m) {
+            resultsArea.innerHTML = `
+                <div class="error">
+                    <h3>${m}</h3>
+                </div>
+            `;
+        }
+
+        function renderMovies(movies, total) {
+            totalResults = parseInt(total);
+            resultsArea.innerHTML = `
+                <p style="color:#888;margin-bottom:1rem">Found ${totalResults} results</p>
+                <div class="movies-grid">
+                    ${movies.map(m => `
+                        <div class="movie-card" onclick="openDetails('${m.imdbID}')">
+                            <div class="movie-poster">
+                                <img src="${m.Poster != 'N/A' ? m.Poster : 'https://via.placeholder.com/300x450/1a1a2e/666?text=No+Poster'}" alt="${m.Title}">
+                                <span class="movie-rating">⭐ ${m.Year}</span>
+                            </div>
+                            <div class="movie-info">
+                                <div class="movie-title">${m.Title}</div>
+                                <div class="movie-year">${m.Year}</div>
+                                <span class="movie-type">${m.Type}</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                ${renderPagination()}
+            `;
+            attachPageEvents();
+        }
+
+        function renderPagination() {
+            const tp = Math.ceil(totalResults / 10);
+            let p = '';
+            for (let i = 1; i <= Math.min(tp, 10); i++) {
+                p += `<button class="page-btn ${i == currentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
+            }
+            return `
+                <div class="pagination">
+                    <button class="page-btn" id="prevPage" ${currentPage == 1 ? 'disabled' : ''}>←</button>
+                    ${p}
+                    <button class="page-btn" id="nextPage" ${currentPage >= tp ? 'disabled' : ''}>→</button>
+                </div>
+            `;
+        }
+
+        function attachPageEvents() {
+            document.querySelectorAll('.page-btn[data-page]').forEach(b => {
+                b.onclick = () => doSearch(parseInt(b.dataset.page));
+            });
+            const prev = $('prevPage');
+            const next = $('nextPage');
+            if (prev) prev.onclick = () => doSearch(currentPage - 1);
+            if (next) next.onclick = () => doSearch(currentPage + 1);
+        }
+
+
+        async function doSearch(page = 1) {
+            const q = searchInput.value.trim();
+            if (!q) {
+                renderError('Enter a search term');
+                return;
+            }
+            currentSearch = q;
+            currentPage = page;
+            renderLoading();
+            try {
+                const d = await searchMovies(q, page, typeFilter.value, yearFilter.value);
+                if (d.Search && d.Search.length) {
+                    renderMovies(d.Search, d.totalResults);
+                } else {
+                    renderError('No movies found');
+                }
+            } catch (e) {
+                renderError('Failed to fetch movies');
+            }
+        }
+
+      //Movie Details
+        async function openDetails(id) {
+            modalBody.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading...</p>
+                </div>
+            `;
+            modal.classList.add('active');
+            try {
+                const m = await getMovieDetails(id);
+                if (m.Response == 'True') {
+                    const r = m.Ratings?.find(r => r.Source == 'Internet Movie Database')?.Value || m.imdbRating || 'N/A';
+                    modalBody.innerHTML = `
+                        <img class="modal-poster" src="${m.Poster != 'N/A' ? m.Poster : 'https://via.placeholder.com/800x400/1a1a2e/666?text=No+Poster'}" alt="${m.Title}">
+                        <div class="modal-details">
+                            <h2 class="modal-title">${m.Title}</h2>
+                            <div class="modal-meta">
+                                <span>📅 ${m.Year}</span>
+                                <span>⏱ ${m.Runtime || 'N/A'}</span>
+                                <span>⭐ ${r}</span>
+                                <span>🎬 ${m.Rated || 'N/A'}</span>
+                            </div>
+                            <p class="modal-plot">${m.Plot || 'No plot available.'}</p>
+                            <div class="modal-stats">
+                                <div class="stat">
+                                    <div class="stat-label">Genre</div>
+                                    <div class="stat-value">${m.Genre || 'N/A'}</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-label">Director</div>
+                                    <div class="stat-value">${m.Director || 'N/A'}</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-label">Actors</div>
+                                    <div class="stat-value">${m.Actors || 'N/A'}</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-label">Language</div>
+                                    <div class="stat-value">${m.Language || 'N/A'}</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-label">Country</div>
+                                    <div class="stat-value">${m.Country || 'N/A'}</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-label">Awards</div>
+                                    <div class="stat-value">${m.Awards || 'N/A'}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    modalBody.innerHTML = '<div class="error">Failed to load details</div>';
+                }
+            } catch (e) {
+                modalBody.innerHTML = '<div class="error">Error loading details</div>';
+            }
+        }
+
+        //EVENT
+searchBtn.onclick=()=>doSearch();
+searchInput.onkeypress=e=>{if(e.key=='Enter')doSearch()};
+modalClose.onclick=()=>modal.classList.remove('active');
+modal.onclick=e=>{if(e.target==modal)modal.classList.remove('active')};
+document.onkeydown=e=>{if(e.key=='Escape')modal.classList.remove('active')};
