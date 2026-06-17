@@ -1,2 +1,21 @@
 # WatchWise
-Single-page web application for browsing movie and television metadata. Built with HTML5, CSS3, and vanilla JavaScript. Features include OMDb API integration, dynamic DOM manipulation, responsive design, and interactive UI components
+
+Movie and TV show search app built with HTML, CSS, and JavaScript.
+
+## Features
+
+- Search movies and TV shows
+- Filter by type and year
+- View detailed information
+- Responsive design
+
+## Tech Stack
+
+- HTML5
+- CSS3
+- JavaScript
+- OMDb API
+
+## About
+
+Made by Umang Dubey 
