@@ -2,6 +2,10 @@
 
 Movie and TV show search app built with HTML, CSS, and JavaScript.
 
+## Live Demo
+
+[https://umang-codess.github.io/WatchWise/]
+
 ## Features
 
 - Search movies and TV shows
