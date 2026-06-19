@@ -466,100 +466,6 @@ let currentPage = 1;
 let currentSearch = '';
 let totalResults = 0;
 
-// --- DOM Elements (DO NOT USE '$' short form) ---
-const searchInput = document.getElementById('searchInput');
-const searchBtn = document.getElementById('searchBtn');
-const resultsArea = document.getElementById('resultsArea');
-const typeFilter = document.getElementById('typeFilter');
-const yearFilter = document.getElementById('yearFilter');
-const modal = document.getElementById('modal');
-const modalClose = document.getElementById('modalClose');
-const modalBody = document.getElementById('modalBody');
-        
-
-        // --- Populate Year Filter ---
-        for (let y = 2024; y >= 1950; y--) {
-            const o = document.createElement('option');
-            o.value = y;
-            o.textContent = y;
-            yearFilter.appendChild(o);
-        }
-
-        
-        async function api(endpoint, params) {
-            const q = new URLSearchParams({ ...params, apikey: API_KEY });
-            const r = await fetch(`${BASE_URL}?${q}`);
-            return r.json();
-        }
-
-        async function searchMovies(query, page = 1, type = '', year = '') {
-            let p = { s: query, page };
-            if (type) p.type = type;
-            if (year) p.y = year;
-            return api('', p);
-        }
-
-        async function getMovieDetails(id) {
-            return api('', { i: id, plot: 'full' });
-        }
-
-         
-        function renderLoading() {
-            resultsArea.innerHTML = `
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <p>Searching...</p>
-                </div>
-            `;
-        }
-
-        function renderError(m) {
-            resultsArea.innerHTML = `
-                <div class="error">
-                    <h3>${m}</h3>
-                </div>
-            `;
-        }
-
-        function renderMovies(movies, total) {
-            totalResults = parseInt(total);
-            resultsArea.innerHTML = `
-                <p style="color:#888;margin-bottom:1rem">Found ${totalResults} results</p>
-                <div class="movies-grid">
-                    ${movies.map(m => `
-                        <div class="movie-card" onclick="openDetails('${m.imdbID}')">
-                            <div class="movie-poster">
-                                <img src="${m.Poster != 'N/A' ? m.Poster : 'https://via.placeholder.com/300x450/1a1a2e/666?text=No+Poster'}" alt="${m.Title}">
-                                <span class="movie-rating">⭐ ${m.Year}</span>
-                            </div>
-                            <div class="movie-info">
-                                <div class="movie-title">${m.Title}</div>
-                                <div class="movie-year">${m.Year}</div>
-                                <span class="movie-type">${m.Type}</span>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-                ${renderPagination()}
-            `;
-            attachPageEvents();
-        }
-
-        function renderPagination() {
-            const tp = Math.ceil(totalResults / 10);
-            let p = '';
-            for (let i = 1; i <= Math.min(tp, 10); i++) {
-                p += `<button class="page-btn ${i == currentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
-            }
-            return `
-                <div class="pagination">
-                    <button class="page-btn" id="prevPage" ${currentPage == 1 ? 'disabled' : ''}>←</button>
-                    ${p}
-                    <button class="page-btn" id="nextPage" ${currentPage >= tp ? 'disabled' : ''}>→</button>
-                </div>
-            `;
-        }
-
         function attachPageEvents() {
             document.querySelectorAll('.page-btn[data-page]').forEach(b => {
                 b.onclick = () => doSearch(parseInt(b.dataset.page));
@@ -660,3 +566,4 @@ searchInput.onkeypress=e=>{if(e.key=='Enter')doSearch()};
 modalClose.onclick=()=>modal.classList.remove('active');
 modal.onclick=e=>{if(e.target==modal)modal.classList.remove('active')};
 document.onkeydown=e=>{if(e.key=='Escape')modal.classList.remove('active')};
+        
