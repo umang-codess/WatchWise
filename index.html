@@ -40,7 +40,7 @@
         }
 
 
-        /*  HERO SECTION  */
+        /* === HERO SECTION === */
         .hero {
             text-align: center;
             padding: 3rem 2rem 2rem;
@@ -120,6 +120,43 @@
 
         .filter-select option {
             background: #1a1a2e;
+        }
+
+        #favToggle.active {
+            background: #e50914;
+            border-color: #e50914;
+        }
+
+        .results-count {
+            color: #888;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .fav-btn {
+            position: absolute;
+            top: 0.5rem;
+            left: 0.5rem;
+            width: 30px;
+            height: 30px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.6);
+            color: #fff;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .fav-btn:hover {
+            transform: scale(1.15);
+        }
+
+        .fav-btn.active {
+            color: #e50914;
         }
 
         /* MOVIES GRID */
@@ -430,6 +467,7 @@
         <select class="filter-select" id="yearFilter">
             <option value="">All Years</option>
         </select>
+        <button class="filter-select" id="favToggle" type="button">♡ Favorites</button>
     </div>
 
      
@@ -465,6 +503,24 @@
 let currentPage = 1;
 let currentSearch = '';
 let totalResults = 0;
+let showingFavorites = false;
+let currentMoviesMap = {}; // imdbID -> movie object, from last rendered results
+let favorites = JSON.parse(localStorage.getItem('movieFavorites') || '{}'); // imdbID -> movie object
+
+function escapeHtml(str) {
+    return (str || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// --- Populate year filter dropdown (ye pehle khali tha) ---
+(function populateYears() {
+    const thisYear = new Date().getFullYear();
+    for (let y = thisYear; y >= 1950; y--) {
+        const opt = document.createElement('option');
+        opt.value = y;
+        opt.textContent = y;
+        yearFilter.appendChild(opt);
+    }
+})();
 
         function attachPageEvents() {
             document.querySelectorAll('.page-btn[data-page]').forEach(b => {
@@ -476,26 +532,10 @@ const next = document.getElementById('nextPage');
             
             if (prev) prev.onclick = () => doSearch(currentPage - 1);
             if (next) next.onclick = () => doSearch(currentPage + 1);
-        }ें
-const yearFilter = document.getElementById('yearFilter');
-const currentYear = new Date().getFullYear();
-
-for (let year = currentYear; year >= currentYear - 50; year--) {
-    const option = document.createElement('option');
-    option.value = year;
-    option.textContent = year;
-    yearFilter.appendChild(option);
-}
-
-yearFilter.addEventListener('change', () => {
-    const selectedYear = yearFilter.value;
-    console.log("यूज़र ने यह साल चुना:", selectedYear);
-    
-});
+        }
 
 
-
-
+        // --- API calls (ye missing the, isliye kuch kaam nahi kar raha tha) ---
         async function searchMovies(query, page, type, year) {
             let url = `${BASE_URL}?apikey=${API_KEY}&s=${encodeURIComponent(query)}&page=${page}`;
             if (type) url += `&type=${type}`;
@@ -511,7 +551,7 @@ yearFilter.addEventListener('change', () => {
             return await res.json();
         }
 
-
+        // --- Render helpers (ye bhi missing the) ---
         function renderLoading() {
             resultsArea.innerHTML = `
                 <div class="loading">
@@ -525,26 +565,37 @@ yearFilter.addEventListener('change', () => {
             resultsArea.innerHTML = `<div class="error">${msg}</div>`;
         }
 
+        // Shared card markup, used for both search results and favorites view
+        function movieCardHTML(m) {
+            const poster = (m.Poster && m.Poster !== 'N/A')
+                ? m.Poster
+                : 'https://via.placeholder.com/300x450/1a1a2e/666?text=No+Poster';
+            const isFav = !!favorites[m.imdbID];
+            return `
+                <div class="movie-card" onclick="openDetails('${m.imdbID}')">
+                    <div class="movie-poster">
+                        <img src="${poster}" alt="${escapeHtml(m.Title)}" loading="lazy">
+                        <button class="fav-btn ${isFav ? 'active' : ''}" data-id="${m.imdbID}"
+                            onclick="toggleFavorite('${m.imdbID}', event)">${isFav ? '♥' : '♡'}</button>
+                    </div>
+                    <div class="movie-info">
+                        <div class="movie-title">${escapeHtml(m.Title)}</div>
+                        <div class="movie-year">${m.Year}</div>
+                        <span class="movie-type">${m.Type}</span>
+                    </div>
+                </div>`;
+        }
+
         function renderMovies(movies, total) {
             totalResults = parseInt(total) || 0;
             const totalPages = Math.min(Math.ceil(totalResults / 10), 100);
 
-            let html = '<div class="movies-grid">';
+            currentMoviesMap = {};
+            let html = `<p class="results-count">Found ${totalResults} result${totalResults === 1 ? '' : 's'} for "${escapeHtml(currentSearch)}"</p>`;
+            html += '<div class="movies-grid">';
             movies.forEach(m => {
-                const poster = (m.Poster && m.Poster !== 'N/A')
-                    ? m.Poster
-                    : 'https://via.placeholder.com/300x450/1a1a2e/666?text=No+Poster';
-                html += `
-                    <div class="movie-card" onclick="openDetails('${m.imdbID}')">
-                        <div class="movie-poster">
-                            <img src="${poster}" alt="${m.Title}" loading="lazy">
-                        </div>
-                        <div class="movie-info">
-                            <div class="movie-title">${m.Title}</div>
-                            <div class="movie-year">${m.Year}</div>
-                            <span class="movie-type">${m.Type}</span>
-                        </div>
-                    </div>`;
+                currentMoviesMap[m.imdbID] = m;
+                html += movieCardHTML(m);
             });
             html += '</div>';
 
@@ -560,6 +611,59 @@ yearFilter.addEventListener('change', () => {
 
             resultsArea.innerHTML = html;
             attachPageEvents();
+        }
+
+        // --- Favorites feature ---
+        function toggleFavorite(id, ev) {
+            if (ev) ev.stopPropagation();
+            if (favorites[id]) {
+                delete favorites[id];
+            } else {
+                const m = currentMoviesMap[id];
+                if (m) favorites[id] = m;
+            }
+            localStorage.setItem('movieFavorites', JSON.stringify(favorites));
+
+            const btn = document.querySelector(`.fav-btn[data-id="${id}"]`);
+            if (btn) {
+                btn.textContent = favorites[id] ? '♥' : '♡';
+                btn.classList.toggle('active', !!favorites[id]);
+            }
+            if (showingFavorites) renderFavoritesView();
+        }
+
+        function renderFavoritesView() {
+            const list = Object.values(favorites);
+            currentMoviesMap = { ...favorites };
+            if (!list.length) {
+                resultsArea.innerHTML = `
+                    <div class="no-results">
+                        <h3>No favorites yet</h3>
+                        <p>Tap the ♡ on any movie to save it here</p>
+                    </div>`;
+                return;
+            }
+            let html = `<p class="results-count">${list.length} favorite${list.length === 1 ? '' : 's'}</p>`;
+            html += '<div class="movies-grid">';
+            list.forEach(m => html += movieCardHTML(m));
+            html += '</div>';
+            resultsArea.innerHTML = html;
+        }
+
+        function toggleFavoritesView() {
+            showingFavorites = !showingFavorites;
+            favToggle.classList.toggle('active', showingFavorites);
+            favToggle.textContent = showingFavorites ? '♥ Favorites' : '♡ Favorites';
+            if (showingFavorites) {
+                renderFavoritesView();
+            } else if (currentSearch) {
+                doSearch(currentPage);
+            } else {
+                resultsArea.innerHTML = `
+                    <div class="no-results">
+                        <h3>Start searching to discover movies</h3>
+                    </div>`;
+            }
         }
 
         async function doSearch(page = 1) {
@@ -649,6 +753,9 @@ searchInput.onkeypress=e=>{if(e.key=='Enter')doSearch()};
 modalClose.onclick=()=>modal.classList.remove('active');
 modal.onclick=e=>{if(e.target==modal)modal.classList.remove('active')};
 document.onkeydown=e=>{if(e.key=='Escape')modal.classList.remove('active')};
+favToggle.onclick=()=>toggleFavoritesView();
+typeFilter.onchange=()=>{ if(!showingFavorites && currentSearch) doSearch(1); };
+yearFilter.onchange=()=>{ if(!showingFavorites && currentSearch) doSearch(1); };
         </script>
 </body>
     </html>
