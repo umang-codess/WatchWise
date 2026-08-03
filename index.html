@@ -479,6 +479,73 @@ const next = document.getElementById('nextPage');
         }
 
 
+        // --- API calls (ye missing the, isliye kuch kaam nahi kar raha tha) ---
+        async function searchMovies(query, page, type, year) {
+            let url = `${BASE_URL}?apikey=${API_KEY}&s=${encodeURIComponent(query)}&page=${page}`;
+            if (type) url += `&type=${type}`;
+            if (year) url += `&y=${year}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            if (data.Response === 'False') throw new Error(data.Error);
+            return data;
+        }
+
+        async function getMovieDetails(id) {
+            const res = await fetch(`${BASE_URL}?apikey=${API_KEY}&i=${id}&plot=full`);
+            return await res.json();
+        }
+
+        // --- Render helpers (ye bhi missing the) ---
+        function renderLoading() {
+            resultsArea.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading...</p>
+                </div>
+            `;
+        }
+
+        function renderError(msg) {
+            resultsArea.innerHTML = `<div class="error">${msg}</div>`;
+        }
+
+        function renderMovies(movies, total) {
+            totalResults = parseInt(total) || 0;
+            const totalPages = Math.min(Math.ceil(totalResults / 10), 100);
+
+            let html = '<div class="movies-grid">';
+            movies.forEach(m => {
+                const poster = (m.Poster && m.Poster !== 'N/A')
+                    ? m.Poster
+                    : 'https://via.placeholder.com/300x450/1a1a2e/666?text=No+Poster';
+                html += `
+                    <div class="movie-card" onclick="openDetails('${m.imdbID}')">
+                        <div class="movie-poster">
+                            <img src="${poster}" alt="${m.Title}" loading="lazy">
+                        </div>
+                        <div class="movie-info">
+                            <div class="movie-title">${m.Title}</div>
+                            <div class="movie-year">${m.Year}</div>
+                            <span class="movie-type">${m.Type}</span>
+                        </div>
+                    </div>`;
+            });
+            html += '</div>';
+
+            if (totalPages > 1) {
+                html += '<div class="pagination">';
+                html += `<button class="page-btn" id="prevPage" ${currentPage <= 1 ? 'disabled' : ''}>Prev</button>`;
+                for (let i = 1; i <= totalPages; i++) {
+                    html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
+                }
+                html += `<button class="page-btn" id="nextPage" ${currentPage >= totalPages ? 'disabled' : ''}>Next</button>`;
+                html += '</div>';
+            }
+
+            resultsArea.innerHTML = html;
+            attachPageEvents();
+        }
+
         async function doSearch(page = 1) {
             const q = searchInput.value.trim();
             if (!q) {
